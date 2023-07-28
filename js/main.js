@@ -1,3 +1,7 @@
+let currentPage = 1;
+const postsPerPage = 12;
+const apiUrl = 'https://jsonplaceholder.typicode.com/posts';
+
 // Función para obtener datos de una URL.
 function getData(url) {
     return fetch(url) // Hacer la solicitud
@@ -7,7 +11,6 @@ function getData(url) {
   // Función para mostrar la lista de posts en el contenedor principal
   function displayPosts(posts) {
     const postListContainer = document.getElementById('post-list');
-    postListContainer.innerHTML = ''; // Limpia el contenido actual
   
     posts.forEach(post => {
 
@@ -22,7 +25,7 @@ function getData(url) {
 
       const cardImage = document.createElement('img');
       cardImage.classList.add('card-img-top', 'mt-3', 'rounded', 'mx-auto', 'd-block');
-      cardImage.src = "./assets/img-post.jpg";
+      cardImage.src = "./assets/img-space.jpg";
       cardImage.style.width = '90%';
   
       const cardBody = document.createElement('div');
@@ -45,15 +48,43 @@ function getData(url) {
       });
     });
   }
+
+  // Función para cargar más posts
+function loadMorePosts() {
+  currentPage++;
+  const startIndex = (currentPage - 1) * postsPerPage;
+  const endIndex = startIndex + postsPerPage;
+
+  getData(apiUrl)
+    .then(posts => {
+      const postsToShow = posts.slice(startIndex, endIndex);
+      displayPosts(postsToShow);
+
+      // Si no hay más posts para mostrar, ocultamos el botón "Cargar más posts"
+      if (endIndex >= posts.length) {
+        const loadMoreButton = document.getElementById('load-more-button');
+        loadMoreButton.style.display = 'none';
+      }
+    })
+    .catch(error => console.error('Error:', error));
+}
   
 // Función para inicializar todo y cargar los datos iniciales
 function init() {
-    getData('https://jsonplaceholder.typicode.com/posts?_limit=12') // Obtener los posts
-        .then(posts => {
-            displayPosts(posts) // Mostrar cada post
-        })
-        .catch(error => console.error('Error:', error)); // Manejar cualquier error que pueda ocurrir
+  const loadMoreButton = document.getElementById('load-more-button');
+  loadMoreButton.addEventListener('click', loadMorePosts);
+
+  getData(apiUrl)
+    .then(posts => {
+      const postsToShow = posts.slice(0, postsPerPage);
+      displayPosts(postsToShow);
+
+      // Si no hay más posts para mostrar, ocultamos el botón "Load more"
+      if (posts.length <= postsPerPage) {
+        loadMoreButton.style.display = 'none';
+      }
+    })
+    .catch(error => console.error('Error:', error));
 }
-  
-  init();
-  
+
+init();
