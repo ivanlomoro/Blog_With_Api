@@ -1,6 +1,7 @@
 let currentPage = 1;
 const postsPerPage = 12;
 const apiUrl = 'https://jsonplaceholder.typicode.com/posts';
+let commentsVisible=false;
 
 // Función para obtener datos de una URL.
 function getData(url) {
@@ -74,32 +75,47 @@ function loadMorePosts() {
     getData(`https://jsonplaceholder.typicode.com/users/${post.userId}`)
       .then(userDetails => {
         const postModalContent = `
-          <div class="modal-header">
-            <h5 class="modal-title">${post.title}</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <div class="modal-header">
+          <h5 class="modal-title">${post.title}</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <p>${post.body}</p>
+          <p>Usuario: ${userDetails.username}</p>
+          <p>Email: ${userDetails.email}</p>
+          <div class="comments-section">
+            <button type="button" class="btn btn-primary" id="toggle-comments">Load comments</button>
+            <div class="comments-list mt-3"></div>
           </div>
-          <div class="modal-body">
-            <p>${post.body}</p>
-            <p>Usuario: ${userDetails.username}</p>
-            <p>Email: ${userDetails.email}</p>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-primary" id="load-comments">Load comments</button>
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-          </div>
-        `;
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      `;
   
         const postModal = document.getElementById('postModal');
         const modalContent = postModal.querySelector('.modal-content');
         modalContent.innerHTML = postModalContent;
+
+        const toggleCommentsButton = document.getElementById('toggle-comments');
+        const commentsList = document.querySelector('.comments-list');
   
-        const loadCommentsButton = document.getElementById('load-comments');
-        loadCommentsButton.addEventListener('click', () => {
-          getData(`https://jsonplaceholder.typicode.com/posts/${post.id}/comments`)
-            .then(comments => {
-              displayComments(comments);
-            })
-            .catch(error => console.error('Error:', error));
+        toggleCommentsButton.addEventListener('click', () => {
+          // Si los comentarios están visibles, los ocultamos y cambiamos el texto del botón
+          if (commentsVisible) {
+            commentsVisible = false;
+            commentsList.innerHTML = '';
+            toggleCommentsButton.textContent = 'Load comments';
+          } else {
+            // Si los comentarios no están visibles, los cargamos y cambiamos el texto del botón
+            commentsVisible = true;
+            getData(`https://jsonplaceholder.typicode.com/posts/${post.id}/comments`)
+              .then(comments => {
+                displayComments(comments, commentsList);
+                toggleCommentsButton.textContent = 'Hide comments';
+              })
+              .catch(error => console.error('Error:', error));
+          }
         });
   
         const myModal = new bootstrap.Modal(postModal);
@@ -109,10 +125,11 @@ function loadMorePosts() {
   }
   
   // Función para mostrar los comentarios en el modal del post
-  function displayComments(comments) {
-    const modalBody = document.querySelector('.modal-body');
+  function displayComments(comments, commentsListContainer) {
+    commentsListContainer.innerHTML = '';
+  
     const commentsList = document.createElement('ul');
-    commentsList.classList.add('list-group', 'mt-3');
+    commentsList.classList.add('list-group');
   
     comments.forEach(comment => {
       const listItem = document.createElement('li');
@@ -124,7 +141,7 @@ function loadMorePosts() {
       commentsList.appendChild(listItem);
     });
   
-    modalBody.appendChild(commentsList);
+    commentsListContainer.appendChild(commentsList);
   }
   
 // Función para inicializar todo y cargar los datos iniciales
