@@ -68,6 +68,64 @@ function loadMorePosts() {
     })
     .catch(error => console.error('Error:', error));
 }
+
+  // Función para mostrar el modal con los detalles de un post
+  function displayPostDetails(post) {
+    getData(`https://jsonplaceholder.typicode.com/users/${post.userId}`)
+      .then(userDetails => {
+        const postModalContent = `
+          <div class="modal-header">
+            <h5 class="modal-title">${post.title}</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <p>${post.body}</p>
+            <p>Usuario: ${userDetails.username}</p>
+            <p>Email: ${userDetails.email}</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary" id="load-comments">Load comments</button>
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+          </div>
+        `;
+  
+        const postModal = document.getElementById('postModal');
+        const modalContent = postModal.querySelector('.modal-content');
+        modalContent.innerHTML = postModalContent;
+  
+        const loadCommentsButton = document.getElementById('load-comments');
+        loadCommentsButton.addEventListener('click', () => {
+          getData(`https://jsonplaceholder.typicode.com/posts/${post.id}/comments`)
+            .then(comments => {
+              displayComments(comments);
+            })
+            .catch(error => console.error('Error:', error));
+        });
+  
+        const myModal = new bootstrap.Modal(postModal);
+        myModal.show();
+      })
+      .catch(error => console.error('Error:', error));
+  }
+  
+  // Función para mostrar los comentarios en el modal del post
+  function displayComments(comments) {
+    const modalBody = document.querySelector('.modal-body');
+    const commentsList = document.createElement('ul');
+    commentsList.classList.add('list-group', 'mt-3');
+  
+    comments.forEach(comment => {
+      const listItem = document.createElement('li');
+      listItem.classList.add('list-group-item');
+      listItem.innerHTML = `
+        <strong>${comment.name}</strong>
+        <p>${comment.body}</p>
+      `;
+      commentsList.appendChild(listItem);
+    });
+  
+    modalBody.appendChild(commentsList);
+  }
   
 // Función para inicializar todo y cargar los datos iniciales
 function init() {
